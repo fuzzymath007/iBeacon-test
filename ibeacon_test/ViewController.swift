@@ -20,9 +20,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         locationManager.delegate = self
+       
         
         locationManager.requestAlwaysAuthorization()
         
+        locationManager.startMonitoringForRegion(region)
         locationManager.startRangingBeaconsInRegion(region)
         locationManager.startUpdatingLocation()
     }
@@ -35,14 +37,34 @@ class ViewController: UIViewController, CLLocationManagerDelegate{
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
         
         print(beacons.filter{ $0.proximity != CLProximity.Unknown })
+       
+        var message:String = ""
         
-        if((beacons.filter{ $0.proximity != CLProximity.Unknown }).count > 0 ){
-            self.view.backgroundColor = UIColor(red: 0/255.0, green: 234/255.0, blue: 108/255.0, alpha: 1)
+        if(beacons.count > 0){
+            let nearestBeacon:CLBeacon = beacons[0] as CLBeacon
+            
+            switch nearestBeacon.proximity{
+            case CLProximity.Far: message = "Even I can not find your keys"
+            case CLProximity.Near: message = "You are close to your keys"
+            case CLProximity.Immediate: message = "You have your keys"
+            case CLProximity.Unknown:
+                return
+            }
         }else{
-           self.view.backgroundColor = UIColor(red: 255/255.0, green: 255/255.0, blue: 255/255.0, alpha: 1)
+            message = "Even I can not find your keys"
         }
+        
+        print(message)
+        
+        sendLocalNotificationWithMessage(message)
+        
+    }
+    
+    func sendLocalNotificationWithMessage(message: String!){
+        let notification:UILocalNotification = UILocalNotification()
+        notification.alertBody = message
+        UIApplication.sharedApplication().scheduleLocalNotification(notification)
     }
 
-    
 }
 
